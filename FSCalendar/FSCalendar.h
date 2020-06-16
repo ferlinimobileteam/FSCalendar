@@ -152,11 +152,6 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Tells the delegate a date in the calendar is selected by long pressing.
  */
-- (BOOL)calendarAllowsLongPress:(FSCalendar *)calendar;
-
-/**
- Tells the delegate a date in the calendar is selected by long pressing.
- */
 - (void)calendar:(FSCalendar *)calendar didLongPress:(NSDate *)date atMonthPosition:(FSCalendarMonthPosition)monthPosition;
 
 @end
@@ -384,6 +379,11 @@ IB_DESIGNABLE
 @property (assign, nonatomic) IBInspectable BOOL scrollEnabled;
 
 /**
+ A Boolean value that determines whether long press on caldar dates  is enabled for the calendar.
+ */
+@property (assign, nonatomic) IBInspectable BOOL longPressEnabled;
+
+/**
  The row height of the calendar if paging enabled is NO.;
  */
 @property (assign, nonatomic) IBInspectable CGFloat rowHeight;
@@ -455,6 +455,14 @@ IB_DESIGNABLE
  @param animated YES if you want to animate the change in position; NO if it should be immediate.
  */
 - (void)setCurrentPage:(NSDate *)currentPage animated:(BOOL)animated;
+
+/**
+ Change the scope of the calendar. Make sure `-calendar:boundingRectWillChange:animated` is correctly adopted.
+ 
+ @param duration The minimum duration of long press gesture recognizer scope to change.
+ */
+- (void)setLongPressMinimumDuration:(CGFloat)duration;
+
 
 /**
  Register a class for use in creating new calendar cells.

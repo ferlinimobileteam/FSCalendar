@@ -53,7 +53,7 @@
         self.dateFormatter2.dateFormat = @"yyyy-MM-dd";
         
         self.calendar.appearance.caseOptions = FSCalendarCaseOptionsHeaderUsesUpperCase|FSCalendarCaseOptionsWeekdayUsesUpperCase;
-        
+                
         self.datesShouldNotBeSelected = @[@"2016/08/07",
                                           @"2016/09/07",
                                           @"2016/10/07",
@@ -85,7 +85,8 @@
     [self.calendar selectDate:[self.dateFormatter1 dateFromString:@"2016/12/05"] scrollToDate:YES];
     
     self.calendar.accessibilityIdentifier = @"calendar";
-    
+    self.calendar.longPressEnabled = YES;
+    [self.calendar setLongPressMinimumDuration:0.6];
 }
 
 - (void)dealloc
@@ -147,10 +148,6 @@
     if (monthPosition == FSCalendarMonthPositionNext || monthPosition == FSCalendarMonthPositionPrevious) {
         [calendar setCurrentPage:date animated:YES];
     }
-}
-
--(BOOL)calendarAllowsLongPress:(FSCalendar *)calendar {
-    return YES;
 }
 
 - (void)calendar:(FSCalendar *)calendar didLongPress:(NSDate *)date atMonthPosition:(FSCalendarMonthPosition)monthPosition {

@@ -46,6 +46,7 @@ typedef NS_ENUM(NSUInteger, FSCalendarOrientation) {
 @interface FSCalendar ()<UICollectionViewDataSource,UICollectionViewDelegate,FSCalendarCollectionViewInternalDelegate,UIGestureRecognizerDelegate>
 {
     NSMutableArray  *_selectedDates;
+    UILongPressGestureRecognizer *longPressGestureRecognizer;
     BOOL isRecognizingLongPress;
 }
 
@@ -187,7 +188,7 @@ typedef NS_ENUM(NSUInteger, FSCalendarOrientation) {
     
     _dataSourceProxy = [FSCalendarDelegationFactory dataSourceProxy];
     _delegateProxy = [FSCalendarDelegationFactory delegateProxy];
-    
+        
     self.didLayoutOperations = NSMutableArray.array;
     
     UIView *contentView = [[UIView alloc] initWithFrame:CGRectZero];
@@ -234,12 +235,11 @@ typedef NS_ENUM(NSUInteger, FSCalendarOrientation) {
  
     // attach long press gesture to collectionView
     //
-    UILongPressGestureRecognizer *lpgr
-      = [[UILongPressGestureRecognizer alloc]
+    longPressGestureRecognizer = [[UILongPressGestureRecognizer alloc]
                     initWithTarget:self action:@selector(handleLongPress:)];
-    lpgr.delegate = self;
-    lpgr.delaysTouchesBegan = YES;
-    [self.collectionView addGestureRecognizer:lpgr];
+    longPressGestureRecognizer.delegate = self;
+    longPressGestureRecognizer.delaysTouchesBegan = YES;
+    [self.collectionView addGestureRecognizer:longPressGestureRecognizer];
 }
 
 - (void)dealloc
@@ -383,24 +383,12 @@ typedef NS_ENUM(NSUInteger, FSCalendarOrientation) {
 
 #pragma mark - <UIGestureRecognizer>
 
--(BOOL)allowsLongPress {
-    BOOL allowsLongPress = NO;
-    if([self.delegateProxy respondsToSelector:@selector(calendarAllowsLongPress:)]) {
-        allowsLongPress =  [self.delegateProxy calendarAllowsLongPress:self];
-    }
-    
-    return allowsLongPress;
-}
 
 - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldReceiveTouch:(UITouch *)touch {
-    return [self allowsLongPress];
+    return self.longPressEnabled;
 }
 
 -(void)handleLongPress:(UILongPressGestureRecognizer *)gestureRecognizer {
-    
-    if(![self allowsLongPress]) {
-        return;
-    }
 
     switch (gestureRecognizer.state) {
         case UIGestureRecognizerStateBegan:
@@ -788,6 +776,10 @@ typedef NS_ENUM(NSUInteger, FSCalendarOrientation) {
             [self scrollToPageForDate:currentPage animated:animated];
         }
     }
+}
+
+- (void)setLongPressMinimumDuration:(CGFloat)duration {
+    longPressGestureRecognizer.minimumPressDuration = duration;
 }
 
 - (void)registerClass:(Class)cellClass forCellReuseIdentifier:(NSString *)identifier
