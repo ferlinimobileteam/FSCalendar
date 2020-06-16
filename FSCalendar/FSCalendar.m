@@ -46,6 +46,7 @@ typedef NS_ENUM(NSUInteger, FSCalendarOrientation) {
 @interface FSCalendar ()<UICollectionViewDataSource,UICollectionViewDelegate,FSCalendarCollectionViewInternalDelegate,UIGestureRecognizerDelegate>
 {
     NSMutableArray  *_selectedDates;
+    BOOL isRecognizingLongPress;
 }
 
 @property (strong, nonatomic) NSCalendar *gregorian;
@@ -230,7 +231,15 @@ typedef NS_ENUM(NSUInteger, FSCalendarOrientation) {
     self.calculator = [[FSCalendarCalculator alloc] initWithCalendar:self];
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(orientationDidChange:) name:UIDeviceOrientationDidChangeNotification object:nil];
-    
+ 
+    // attach long press gesture to collectionView
+    //
+    UILongPressGestureRecognizer *lpgr
+      = [[UILongPressGestureRecognizer alloc]
+                    initWithTarget:self action:@selector(handleLongPress:)];
+    lpgr.delegate = self;
+    lpgr.delaysTouchesBegan = YES;
+    [self.collectionView addGestureRecognizer:lpgr];
 }
 
 - (void)dealloc
@@ -372,6 +381,58 @@ typedef NS_ENUM(NSUInteger, FSCalendarOrientation) {
     return size;
 }
 
+#pragma mark - <UIGestureRecognizer>
+
+-(BOOL)allowsLongPress {
+    BOOL allowsLongPress = NO;
+    if([self.delegateProxy respondsToSelector:@selector(calendarAllowsLongPress:)]) {
+        allowsLongPress =  [self.delegateProxy calendarAllowsLongPress:self];
+    }
+    
+    return allowsLongPress;
+}
+
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldReceiveTouch:(UITouch *)touch {
+    return [self allowsLongPress];
+}
+
+-(void)handleLongPress:(UILongPressGestureRecognizer *)gestureRecognizer {
+    
+    if(![self allowsLongPress]) {
+        return;
+    }
+
+    switch (gestureRecognizer.state) {
+        case UIGestureRecognizerStateBegan:
+            isRecognizingLongPress = true;
+            break;
+        case UIGestureRecognizerStateEnded: {
+            CGPoint point = [gestureRecognizer locationInView:self.collectionView];
+            NSIndexPath* indexPath = [self.collectionView indexPathForItemAtPoint:point];
+
+            NSDate* date = [self.calculator dateForIndexPath:indexPath];
+            FSCalendarMonthPosition monthPosition = [self.calculator monthPositionForIndexPath:indexPath];
+            for (NSDate* previousSelected in _selectedDates) {
+                [self deselectDate:previousSelected];
+            }
+            [self selectDate:date];
+            [self enqueueSelectedDate:date];
+            [self selectCounterpartDate:date];
+            
+            if([self.delegateProxy respondsToSelector:@selector(calendar:didLongPress:atMonthPosition:)]) {
+                [self.delegateProxy calendar:self didLongPress:date atMonthPosition:monthPosition];
+            }
+            isRecognizingLongPress = false;
+            break;
+        }
+        case UIGestureRecognizerStateCancelled:
+            isRecognizingLongPress = false;
+            break;
+        default:
+            break;
+    }
+}
+
 #pragma mark - <UICollectionViewDataSource>
 
 - (NSInteger)numberOfSectionsInCollectionView:(UICollectionView *)collectionView
@@ -458,6 +519,9 @@ typedef NS_ENUM(NSUInteger, FSCalendarOrientation) {
 
 - (BOOL)collectionView:(UICollectionView *)collectionView shouldSelectItemAtIndexPath:(NSIndexPath *)indexPath
 {
+    if(isRecognizingLongPress) {
+        return NO;
+    }
     FSCalendarMonthPosition monthPosition = [self.calculator monthPositionForIndexPath:indexPath];
     if (self.placeholderType == FSCalendarPlaceholderTypeNone && monthPosition != FSCalendarMonthPositionCurrent) {
         return NO;

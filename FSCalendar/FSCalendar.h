@@ -147,6 +147,17 @@ NS_ASSUME_NONNULL_BEGIN
  Tells the delegate the calendar is about to change the current page.
  */
 - (void)calendarCurrentPageDidChange:(FSCalendar *)calendar;
+@optional
+
+/**
+ Tells the delegate a date in the calendar is selected by long pressing.
+ */
+- (BOOL)calendarAllowsLongPress:(FSCalendar *)calendar;
+
+/**
+ Tells the delegate a date in the calendar is selected by long pressing.
+ */
+- (void)calendar:(FSCalendar *)calendar didLongPress:(NSDate *)date atMonthPosition:(FSCalendarMonthPosition)monthPosition;
 
 @end
 

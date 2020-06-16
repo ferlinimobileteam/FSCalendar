@@ -68,6 +68,7 @@
                                 @"2016-12-25"];
         
         self.lunarFormatter = [[LunarFormatter alloc] init];
+        
     }
     return self;
 }
@@ -146,6 +147,14 @@
     if (monthPosition == FSCalendarMonthPositionNext || monthPosition == FSCalendarMonthPositionPrevious) {
         [calendar setCurrentPage:date animated:YES];
     }
+}
+
+-(BOOL)calendarAllowsLongPress:(FSCalendar *)calendar {
+    return YES;
+}
+
+- (void)calendar:(FSCalendar *)calendar didLongPress:(NSDate *)date atMonthPosition:(FSCalendarMonthPosition)monthPosition {
+    NSLog(@"did long press date %@",[self.dateFormatter1 stringFromDate:date]);
 }
 
 - (void)calendarCurrentPageDidChange:(FSCalendar *)calendar
