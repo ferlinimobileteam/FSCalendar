@@ -398,7 +398,12 @@ typedef NS_ENUM(NSUInteger, FSCalendarOrientation) {
             CGPoint point = [gestureRecognizer locationInView:self.collectionView];
             NSIndexPath* indexPath = [self.collectionView indexPathForItemAtPoint:point];
 
-            NSDate* date = [self.calculator dateForIndexPath:indexPath];
+            NSDate * const date = [self.calculator dateForIndexPath:indexPath];
+            if (date == nil) {
+                isRecognizingLongPress = false;
+                return;
+            }
+            
             FSCalendarMonthPosition monthPosition = [self.calculator monthPositionForIndexPath:indexPath];
             for (NSDate* previousSelected in _selectedDates) {
                 [self deselectDate:previousSelected];
